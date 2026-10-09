@@ -419,10 +419,10 @@ export function normalizeHeadContext(ctx = {}) {
   // public/og.jpg generated after that snapshot (or missed by a wrong cwd)
   // wins over the og.grok.me placeholder. Vercel has no public/ to read, so
   // a correct bake is unchanged.
-  const site = applyCustomCardFromFs(
-    ctx.site !== undefined ? ctx.site : snapshotOgIdentity(cwd).site,
-    cwd,
-  );
+  // Only use a baked site identity when the caller explicitly supplies it.
+  // This keeps the shared injector deterministic in tests and generic HTML
+  // transforms; Vite/Nitro callers pass snapshotOgIdentity(root).site.
+  const site = applyCustomCardFromFs(ctx.site ?? {}, cwd);
   const appName = resolveOgTitle(site, ctx.appName ?? DEFAULT_APP_NAME, ctx.host ?? "");
   return {
     appName,
