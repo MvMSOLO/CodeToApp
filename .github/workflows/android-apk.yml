@@ -73,17 +73,23 @@ jobs:
     needs: source-checks
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install project dependencies
+        run: npm ci
+      - name: Install temporary Capacitor toolchain
+        run: npm install --no-save --package-lock=false @capacitor/core@7 @capacitor/android@7 @capacitor/cli@7
+      - name: Build Android web bundle
+        run: npx vite build --config vite.android.config.ts
+      - name: Generate native Android wrapper
+        run: npx cap add android && npx cap sync android
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
           cache: gradle
-      - name: Verify native Android wrapper exists
-        run: |
-          if [ ! -f android/gradlew ] || [ ! -f android/app/build.gradle ] && [ ! -f android/app/build.gradle.kts ]; then
-            echo "::error::No Android Gradle wrapper is committed. This web workspace must first be converted/configured as an Android app (for example with a suitable Capacitor/TWA setup); this workflow will not fabricate an APK."
-            exit 1
-          fi
       - name: Build debug APK
         working-directory: android
         run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
