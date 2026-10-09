@@ -9,7 +9,6 @@ on:
       - 'package-lock.json'
       - 'src/**'
       - 'vite.config.ts'
-      - '.github/workflows/android-apk.yml'
   pull_request:
     paths:
       - 'package.json'
