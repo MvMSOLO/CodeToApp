@@ -28,14 +28,41 @@ jobs:
         run: npm run typecheck
       - name: Unit tests
         run: npm test
+      - name: Start development server for auth invariant
+        run: |
+          npm run dev > /tmp/codetoapp-dev.log 2>&1 &
+          echo $! > /tmp/codetoapp-dev.pid
+          for i in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:8080/__app-env > /tmp/codetoapp-app-env.json; then
+              cat /tmp/codetoapp-app-env.json
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/codetoapp-dev.log
+          echo "::error::Development server did not expose /__app-env within 60 seconds."
+          exit 1
       - name: Auth invariants
         run: npm run check:auth
+      - name: Stop development server
+        if: always()
+        run: |
+          if [ -f /tmp/codetoapp-dev.pid ]; then
+            kill "$(cat /tmp/codetoapp-dev.pid)" 2>/dev/null || true
+          fi
+      - name: Inspect generated web output
+        run: |
+          echo "Vercel static output:"
+          find .vercel/output/static -maxdepth 2 -type f 2>/dev/null | head -80 || true
+          echo "Nitro output:"
+          find .output -maxdepth 2 -type f 2>/dev/null | head -80 || true
       - name: Upload web build output
         uses: actions/upload-artifact@v4
         with:
           name: codetoapp-web-build
           path: |
-            .output/
+            .vercel/output/static/
+            .output/public/
             dist/
           if-no-files-found: warn
           retention-days: 7
