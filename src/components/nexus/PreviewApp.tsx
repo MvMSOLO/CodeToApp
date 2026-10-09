@@ -6,7 +6,8 @@ import { FlutterStage } from "@/lib/nexus/flutter/render";
 import { prepareHtml } from "@/lib/nexus/html";
 import { parseJsonValue, summarize } from "@/lib/nexus/json/interpret";
 import { JsonStage } from "@/lib/nexus/json/render";
-import { readLive, subscribeLive, type LivePayload } from "@/lib/nexus/live";
+import { readLive, subscribeLive } from "@/lib/nexus/live";
+import type { LivePayload } from "@/lib/nexus/types";
 import { MODE_LABEL } from "@/lib/nexus/types";
 import { buzz } from "@/lib/nexus/store";
 
