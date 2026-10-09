@@ -10,10 +10,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: codetoapp-ci-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   source-checks:
     name: Validate source and build web app
