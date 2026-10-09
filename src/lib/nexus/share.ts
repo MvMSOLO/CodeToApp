@@ -39,7 +39,7 @@ export async function packShare(payload: SharePayload): Promise<string | null> {
       const token = `0${toUrl(bytesToB64(bytes))}`;
       return token.length > 6500 ? null : token;
     }
-    const stream = new Blob([new Uint8Array(bytes).buffer as ArrayBuffer].stream().pipeThrough(new CompressionStream("gzip"));
+    const stream = new Blob([new Uint8Array(bytes).buffer as ArrayBuffer]).stream().pipeThrough(new CompressionStream("gzip"));
     const zipped = new Uint8Array(await new Response(stream).arrayBuffer());
     const token = `1${toUrl(bytesToB64(zipped))}`;
     return token.length > 6500 ? null : token;
@@ -54,7 +54,7 @@ export async function unpackShare(token: string): Promise<SharePayload | null> {
     const bytes = b64ToBytes(fromUrl(token.slice(1)));
     let text = "";
     if (kind === "1" && typeof DecompressionStream !== "undefined") {
-      const stream = new Blob([new Uint8Array(bytes).buffer as ArrayBuffer].stream().pipeThrough(new DecompressionStream("gzip"));
+      const stream = new Blob([new Uint8Array(bytes).buffer as ArrayBuffer]).stream().pipeThrough(new DecompressionStream("gzip"));
       text = await new Response(stream).text();
     } else if (kind === "0") {
       text = new TextDecoder().decode(bytes);
