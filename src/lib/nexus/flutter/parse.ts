@@ -163,7 +163,7 @@ class Parser {
     this.i = start;
   }
 
-  private get ch() {
+  private currentChar(): string {
     return this.src[this.i] ?? "";
   }
 
@@ -198,35 +198,35 @@ class Parser {
   parseValue(): FVal {
     this.skipWs();
     if (this.i >= this.src.length) throw this.err("Unexpected end of source");
-    if (this.ch === "r" && (this.src[this.i + 1] === "'" || this.src[this.i + 1] === '"')) this.i += 1;
-    if (this.ch === "'" || this.ch === '"') return this.parseString();
-    if (this.ch === "[") return this.parseList();
-    if (this.ch === "{") return this.parseMapOrSet();
-    if (this.ch === "<") {
+    if (this.currentChar() === "r" && (this.src[this.i + 1] === "'" || this.src[this.i + 1] === '"')) this.i += 1;
+    if (this.currentChar() === "'" || this.currentChar() === '"') return this.parseString();
+    if (this.currentChar() === "[") return this.parseList();
+    if (this.currentChar() === "{") return this.parseMapOrSet();
+    if (this.currentChar() === "<") {
       this.skipAngles();
       return this.parseValue();
     }
-    if (this.ch === "(") return this.parseGroupOrClosure();
-    if (/[0-9]/.test(this.ch) || (this.ch === "-" && /[0-9]/.test(this.src[this.i + 1] ?? ""))) {
+    if (this.currentChar() === "(") return this.parseGroupOrClosure();
+    if (/[0-9]/.test(this.currentChar()) || (this.currentChar() === "-" && /[0-9]/.test(this.src[this.i + 1] ?? ""))) {
       return this.parseNumber();
     }
-    if (!/[A-Za-z_]/.test(this.ch)) throw this.err(`Unexpected "${this.ch || "EOF"}"`);
+    if (!/[A-Za-z_]/.test(this.currentChar())) throw this.err(`Unexpected "${this.currentChar() || "EOF"}"`);
     const name = this.readIdent();
     if (name === "true") return { kind: "bool", v: true };
     if (name === "false") return { kind: "bool", v: false };
     if (name === "null") return { kind: "null" };
     if (name === "const" || name === "new" || name === "required" || name === "final") return this.parseValue();
     this.skipWs();
-    if (this.ch === "<") {
+    if (this.currentChar() === "<") {
       this.skipAngles();
       this.skipWs();
     }
-    if (this.ch === "(") return this.parseCallRest(name);
+    if (this.currentChar() === "(") return this.parseCallRest(name);
     return { kind: "ident", v: name };
   }
 
   private parseCallRest(name: string): FCall {
-    if (this.ch !== "(") throw this.err("Expected (");
+    if (this.currentChar() !== "(") throw this.err("Expected (");
     this.i += 1;
     this.nodes += 1;
     if (this.nodes > MAX_NODES) throw this.err("Widget tree exceeds the safety limit");
@@ -234,21 +234,21 @@ class Parser {
     const named: Record<string, FVal> = {};
     while (this.i < this.src.length) {
       this.skipWs();
-      if (this.ch === ")") {
+      if (this.currentChar() === ")") {
         this.i += 1;
         break;
       }
-      if (this.ch === ",") {
+      if (this.currentChar() === ",") {
         this.i += 1;
         continue;
       }
       const before = this.i;
       try {
-        if (/[A-Za-z_]/.test(this.ch)) {
+        if (/[A-Za-z_]/.test(this.currentChar())) {
           const mark = this.i;
           const ident = this.readIdent();
           this.skipWs();
-          if (this.ch === ":") {
+          if (this.currentChar() === ":") {
             this.i += 1;
             named[ident] = this.parseValue();
           } else {
@@ -265,7 +265,7 @@ class Parser {
         this.skipToArgBoundary();
       }
       this.skipWs();
-      if (this.ch === ",") this.i += 1;
+      if (this.currentChar() === ",") this.i += 1;
     }
     this.skipTrailingCalls();
     return { kind: "call", name, positional, named };
@@ -273,16 +273,16 @@ class Parser {
 
   private skipTrailingCalls() {
     this.skipWs();
-    while (this.ch === "." && this.src[this.i + 1] !== ".") {
+    while (this.currentChar() === "." && this.src[this.i + 1] !== ".") {
       const mark = this.i;
       this.i += 1;
-      if (!/[A-Za-z_]/.test(this.ch)) {
+      if (!/[A-Za-z_]/.test(this.currentChar())) {
         this.i = mark;
         return;
       }
       this.readIdent();
       this.skipWs();
-      if (this.ch === "(") this.skipBalanced("(", ")");
+      if (this.currentChar() === "(") this.skipBalanced("(", ")");
       else {
         this.i = mark;
         return;
@@ -300,7 +300,7 @@ class Parser {
     if (arrow) {
       this.i = j + 2;
       this.skipWs();
-      if (this.ch === "{") {
+      if (this.currentChar() === "{") {
         this.skipBalanced("{", "}");
         if (this.warnings.length < 12) this.warnings.push("Ignored a closure body. Use nexus.inc(), nexus.nav(), or nexus.set().");
         return { kind: "null" };
@@ -316,7 +316,7 @@ class Parser {
     this.i += 1;
     const value = this.parseValue();
     this.skipWs();
-    if (this.ch === ")") this.i += 1;
+    if (this.currentChar() === ")") this.i += 1;
     return value;
   }
 
@@ -325,15 +325,15 @@ class Parser {
     const v: FVal[] = [];
     while (this.i < this.src.length) {
       this.skipWs();
-      if (this.ch === "]") {
+      if (this.currentChar() === "]") {
         this.i += 1;
         break;
       }
-      if (this.ch === ",") {
+      if (this.currentChar() === ",") {
         this.i += 1;
         continue;
       }
-      if (this.ch === "<") {
+      if (this.currentChar() === "<") {
         this.skipAngles();
         continue;
       }
@@ -354,33 +354,33 @@ class Parser {
   private parseMapOrSet(): FVal {
     this.i += 1;
     this.skipWs();
-    if (this.ch === "}") {
+    if (this.currentChar() === "}") {
       this.i += 1;
       return { kind: "map", v: {} };
     }
     const first = this.parseValue();
     this.skipWs();
-    if (this.ch === ":") {
+    if (this.currentChar() === ":") {
       const map: Record<string, FVal> = {};
       const key = mapKey(first);
       this.i += 1;
       if (key) map[key] = this.parseValue();
       while (this.i < this.src.length) {
         this.skipWs();
-        if (this.ch === "}") {
+        if (this.currentChar() === "}") {
           this.i += 1;
           break;
         }
-        if (this.ch === ",") {
+        if (this.currentChar() === ",") {
           this.i += 1;
           this.skipWs();
-          if (this.ch === "}") {
+          if (this.currentChar() === "}") {
             this.i += 1;
             break;
           }
           const kVal = this.parseValue();
           this.skipWs();
-          if (this.ch === ":") {
+          if (this.currentChar() === ":") {
             this.i += 1;
             const k = mapKey(kVal);
             if (k) map[k] = this.parseValue();
@@ -394,14 +394,14 @@ class Parser {
     const list = [first];
     while (this.i < this.src.length) {
       this.skipWs();
-      if (this.ch === "}") {
+      if (this.currentChar() === "}") {
         this.i += 1;
         break;
       }
-      if (this.ch === ",") {
+      if (this.currentChar() === ",") {
         this.i += 1;
         this.skipWs();
-        if (this.ch === "}") {
+        if (this.currentChar() === "}") {
           this.i += 1;
           break;
         }
@@ -414,7 +414,7 @@ class Parser {
   }
 
   private parseString(): FVal {
-    const q = this.ch;
+    const q = this.currentChar();
     if (this.src.startsWith(q + q + q, this.i)) {
       const end = this.src.indexOf(q + q + q, this.i + 3);
       if (end < 0) throw this.err("Unterminated string");
@@ -476,7 +476,7 @@ class Parser {
 
   private readIdent(): string {
     const start = this.i;
-    if (!/[A-Za-z_]/.test(this.ch)) throw this.err("Expected a name");
+    if (!/[A-Za-z_]/.test(this.currentChar())) throw this.err("Expected a name");
     this.i += 1;
     while (/[A-Za-z0-9_]/.test(this.src[this.i] ?? "")) this.i += 1;
     while (
@@ -491,7 +491,7 @@ class Parser {
   }
 
   private skipAngles() {
-    if (this.ch !== "<") return;
+    if (this.currentChar() !== "<") return;
     let d = 0;
     while (this.i < this.src.length) {
       const c = this.src[this.i];
