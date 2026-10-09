@@ -26,14 +26,14 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Build web app
+        run: npm run build:dev
       - name: TypeScript check
         run: npm run typecheck
       - name: Unit tests
         run: npm test
       - name: Auth invariants
         run: npm run check:auth
-      - name: Build web app
-        run: npm run build:dev
       - name: Upload web build output
         uses: actions/upload-artifact@v4
         with:
