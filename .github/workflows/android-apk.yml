@@ -82,7 +82,10 @@ jobs:
       - name: Install temporary Capacitor toolchain
         run: npm install --no-save --package-lock=false @capacitor/core@7 @capacitor/android@7 @capacitor/cli@7
       - name: Build Android web bundle
-        run: npx vite build --config vite.android.config.ts
+        run: |
+          npx vite build --config vite.android.config.ts
+          # Capacitor requires the web root to contain index.html.
+          mv android-web/android.html android-web/index.html
       - name: Generate native Android wrapper
         run: npx cap add android && npx cap sync android
       - uses: actions/setup-java@v4
