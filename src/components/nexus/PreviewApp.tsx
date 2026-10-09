@@ -129,7 +129,7 @@ export function PreviewApp() {
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold">{live.title}</p>
           <p className="text-xs text-muted">
-            {MODE_LABEL[live.mode]} stage
+            {MODE_LABEL[live.mode as keyof typeof MODE_LABEL]} stage
             {live.mode === "flutter" ? " · Nexus widget runtime" : ""}
             {live.mode === "html" ? " · sealed frame" : ""}
           </p>

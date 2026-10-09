@@ -1,4 +1,5 @@
 import type { LivePayload } from "./types";
+export type { LivePayload };
 
 export const LIVE_KEY = "nexus:live";
 const CHANNEL = "nexus-hot";

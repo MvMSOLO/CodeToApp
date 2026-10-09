@@ -3,6 +3,6 @@ import { handleSignaling } from "@/lib/multiplayer/signaling.server";
 
 const handle = ({ request }: { request: Request }) => handleSignaling(request);
 
-export const Route = createFileRoute("/api/rtc")({
+export const Route = createFileRoute("/api/rtc" as any)({
   server: { handlers: { GET: handle, POST: handle } },
 });
